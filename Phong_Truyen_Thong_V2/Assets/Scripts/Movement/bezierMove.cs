@@ -21,10 +21,13 @@ namespace SWS
     {
         
 
+
         public Camera CameraMain;
         public int currentLookview = 0;
         public float rotationDamping = 5.0f;
         private bool onChange = true;
+        bool escape = false;
+        private Quaternion rotCamera;
         [HideInInspector]
         private enum State
         {
@@ -166,7 +169,7 @@ namespace SWS
         /// SmoothFllow
         /// </summary>
 
-
+        
 
         //check for automatic initialization
         void Start()
@@ -176,7 +179,7 @@ namespace SWS
             {
                 StartMove();
             }
-
+            rotCamera = CameraMain.transform.rotation;
 
         }
 
@@ -367,7 +370,10 @@ namespace SWS
 
                 
                 CameraMain.transform.rotation = Quaternion.Slerp(CameraMain.transform.rotation, rotation, Time.deltaTime * rotationDamping);
-
+                while (escape)
+                {
+                    yield return null;
+                }
                 yield return null;
             }
             yield return StartCoroutine(Wait());
@@ -448,22 +454,17 @@ namespace SWS
 
         public void onGameOver()
         {
-            StartCoroutine(GameOver());
-        }
-
-        public IEnumerator GameOver()
-        {
-            while (AudioManager.intance.IsPlayNow())
-            {
-                yield return null;
-            }
-
             GameUI.intance.onGameOver();
         }
 
         public void onAgain()
         {
             GameUI.intance.disGameover();
+            CameraMain.transform.localRotation = rotCamera;
+            if(rotdirec!=null)      StopCoroutine(rotdirec);
+            SmoothFollow.checkrotation = true;
+            escape = false;
+            onChange = true;
             currentPoint = 0;
             currentLookview = 0;
             CreateTween();
@@ -518,9 +519,11 @@ namespace SWS
 
             if (MainObject.intance.objects[currentLookview].isView)
             {
+                StopCoroutine("Escape");
                 MainObject.intance.objects[currentLookview].viewHold.SetActive(true);
                 yield return StartCoroutine(ViewEditorInCheif.intance.endView());
                 MainObject.intance.objects[currentLookview].viewHold.SetActive(false);
+                StartCoroutine("Escape");
             }
             
             currentLookview++;
@@ -630,6 +633,8 @@ namespace SWS
             {
                 yield return new WaitForSeconds(0);
             }
+            escape = true;
+            
             tween.Pause();
             AudioManager.intance.StopSound();
             onGameOver();

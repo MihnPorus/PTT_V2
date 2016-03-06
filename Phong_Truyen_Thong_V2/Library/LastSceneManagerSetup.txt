@@ -1,4 +1,4 @@
 sceneSetups:
-- path: Assets/Scence/Menu.unity
+- path: Assets/Scence/PhongTruyenThong.unity
   isLoaded: 1
   isActive: 1
